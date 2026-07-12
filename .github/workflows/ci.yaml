@@ -18,6 +18,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug Docker username and tag
+        run: |
+          echo "Pushing to: ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:${{ github.run_id }}"
+
       - name: Set up Go 1.22
         uses: actions/setup-go@v5
         with:
@@ -56,6 +60,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Validate DockerHub secrets
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "ERROR: DOCKERHUB_USERNAME secret is missing or empty"; exit 1
+          fi
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "ERROR: DOCKERHUB_TOKEN secret is missing or empty"; exit 1
+          fi
+          echo "DockerHub secrets appear set"
+
+      - name: Validate Dockerfile exists
+        run: |
+          if [ ! -f ./Dockerfile ]; then
+            echo "ERROR: Dockerfile not found in repository root"; ls -la; exit 1
+          fi
+          echo "Dockerfile found"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
